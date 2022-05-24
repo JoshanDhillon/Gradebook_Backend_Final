@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -42,7 +43,7 @@ public class GradeBookController {
 	
 	@Autowired
 	RegistrationService registrationService;
-	
+
 	// get assignments for an instructor that need grading
 	@GetMapping("/gradebook")
 	public AssignmentListDTO getAssignmentsNeedGrading( ) {
@@ -95,9 +96,11 @@ public class GradeBookController {
 		System.out.println("Gradebook - calcFinalGrades for course " + course_id);
 		
 		// check that this request is from the course instructor 
-		String email = "dwisneski@csumb.edu";  // user name (should be instructor's email) 
-		
+		//String email = "dwisneski@csumb.edu";  // user name (should be instructor's email)
+		String email = "jjolley@csumb.edu";  // user name (should be instructor's email)
+
 		Course c = courseRepository.findById(course_id).orElse(null);
+		//System.out.println(c);
 		if (!c.getInstructor().equals(email)) {
 			throw new ResponseStatusException( HttpStatus.UNAUTHORIZED, "Not Authorized. " );
 		}
