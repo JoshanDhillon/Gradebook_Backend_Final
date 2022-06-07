@@ -58,3 +58,4 @@ public class RegistrationServiceMQ extends RegistrationService {
 	}
 
 }
+
