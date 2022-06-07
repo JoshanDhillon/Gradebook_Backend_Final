@@ -53,17 +53,12 @@ public class Assignment {
 	public void setNeedsGrading(int needsGrading) {
 		this.needsGrading = needsGrading;
 	}
-	
+
 	public Course getCourse() {
 		return course;
 	}
 	public void setCourse(Course course) {
 		this.course = course;
-	}
-	@Override
-	public String toString() {
-		return "Assignment [id=" + id + ", course_id=" + course.getCourse_id() + ", name=" + name + ", dueDate=" + dueDate
-				+ ", needsGrading=" + needsGrading + "]";
 	}
 
 	public List<AssignmentGrade> getAssignmentGrades() {
@@ -73,4 +68,10 @@ public class Assignment {
 	public void setAssignmentGrades(List<AssignmentGrade> assignmentGrades) {
 		this.assignmentGrades = assignmentGrades;
 	}
+	@Override
+	public String toString() {
+		return "Assignment [id=" + id + ", course_id=" + course.getCourse_id() + ", name=" + name + ", dueDate=" + dueDate
+				+ ", needsGrading=" + needsGrading + "]";
+	}
+	
 }

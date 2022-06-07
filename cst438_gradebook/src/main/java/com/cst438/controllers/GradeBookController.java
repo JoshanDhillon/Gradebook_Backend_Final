@@ -4,8 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -43,13 +44,27 @@ public class GradeBookController {
 	
 	@Autowired
 	RegistrationService registrationService;
-
+	
 	// get assignments for an instructor that need grading
 	@GetMapping("/gradebook")
-	public AssignmentListDTO getAssignmentsNeedGrading( ) {
+	public AssignmentListDTO getAssignmentsNeedGrading( @AuthenticationPrincipal OAuth2User principal ) {
 		
-		String email = "dwisneski@csumb.edu";  // user name (should be instructor's email) 
-		
+		String email = principal.getAttribute("email"); // user name (should be instructor's email)
+
+		// Check whether given email is in the Course table
+		List<Course> courses = courseRepository.findCoursesByEmail(email);
+		boolean is_given_instructor_exist = false;
+		for (Course c : courses){
+			if (c.getInstructor().equals(email)){
+				is_given_instructor_exist = true;
+				break;
+			}
+		}
+		if (!is_given_instructor_exist) {
+			System.out.println("This user not have access to get assignments that need grading.");
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "This user not have access to get assignments that need grading.");
+		}
+
 		List<Assignment> assignments = assignmentRepository.findNeedGradingByEmail(email);
 		AssignmentListDTO result = new AssignmentListDTO();
 		for (Assignment a: assignments) {
@@ -59,9 +74,9 @@ public class GradeBookController {
 	}
 	
 	@GetMapping("/gradebook/{id}")
-	public GradebookDTO getGradebook(@PathVariable("id") Integer assignmentId  ) {
-		
-		String email = "dwisneski@csumb.edu";  // user name (should be instructor's email) 
+	public GradebookDTO getGradebook(@PathVariable("id") Integer assignmentId, @AuthenticationPrincipal OAuth2User principal ) {
+
+		String email = principal.getAttribute("email");  // user name (should be instructor's email)
 		Assignment assignment = checkAssignment(assignmentId, email);
 		
 		// get the enrollment for the course
@@ -92,15 +107,13 @@ public class GradeBookController {
 	
 	@PostMapping("/course/{course_id}/finalgrades")
 	@Transactional
-	public void calcFinalGrades(@PathVariable int course_id) {
+	public void calcFinalGrades(@PathVariable int course_id, @AuthenticationPrincipal OAuth2User principal) {
 		System.out.println("Gradebook - calcFinalGrades for course " + course_id);
 		
 		// check that this request is from the course instructor 
-		//String email = "dwisneski@csumb.edu";  // user name (should be instructor's email)
-		String email = "jjolley@csumb.edu";  // user name (should be instructor's email)
-
+		String email = principal.getAttribute("email"); // user name (should be instructor's email)
+		
 		Course c = courseRepository.findById(course_id).orElse(null);
-		//System.out.println(c);
 		if (!c.getInstructor().equals(email)) {
 			throw new ResponseStatusException( HttpStatus.UNAUTHORIZED, "Not Authorized. " );
 		}
@@ -137,9 +150,9 @@ public class GradeBookController {
 	
 	@PutMapping("/gradebook/{id}")
 	@Transactional
-	public void updateGradebook (@RequestBody GradebookDTO gradebook, @PathVariable("id") Integer assignmentId ) {
-		
-		String email = "dwisneski@csumb.edu";  // user name (should be instructor's email) 
+	public void updateGradebook (@RequestBody GradebookDTO gradebook, @PathVariable("id") Integer assignmentId, @AuthenticationPrincipal OAuth2User principal ) {
+
+		String email = principal.getAttribute("email");  // user name (should be instructor's email)
 		checkAssignment(assignmentId, email);  // check that user name matches instructor email of the course.
 		
 		// for each grade in gradebook, update the assignment grade in database 
